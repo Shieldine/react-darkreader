@@ -40,7 +40,7 @@ export default function useDarkreader(
   defaultDarken: boolean = false,
   theme?: Partial<Theme>,
   fixes?: DynamicThemeFix,
-  allowSystem: boolean = true,
+  allowSystem: boolean = false,
 ): Result {
   const STORAGE_KEY = 'darkreader-mode';
 

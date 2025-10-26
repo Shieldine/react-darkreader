@@ -22,7 +22,7 @@ Install with yarn
 yarn add react-darkreader
 ```
 
-Or you can
+Or
 
 ```bash
 npm install react-darkreader
@@ -36,7 +36,7 @@ Or inject the script at your page by [jsdelivr CDN](https://www.jsdelivr.com/)
 
 ## 🚀 Usage
 
-You can import the darkmode as a react component.
+For a simple light/dark switch, darkreader can be used as a component:
 
 ```tsx | pure
 import React from 'react';
@@ -45,16 +45,22 @@ import Darkreader from 'react-darkreader';
 export default () => <Darkreader />;
 ```
 
-You can also create darkmode by the react hook `useDarkreader`
+For a custom switch and/or following the system's preference, you can use the `useDarkreader` hook.
 
 ```tsx | pure
 import React from 'react';
-import { Switch, useDarkreader } from 'react-darkreader';
+import { useDarkreader } from 'react-darkreader';
 
 export default () => {
-  const [isDark, { toggle }] = useDarkreader(false);
+  const [isDark, { toggle }, mode] = useDarkreader(false);
 
-  return <Switch checked={isDark} onChange={toggle} />;
+  return (
+    <>
+      <CustomSwitch mode={mode} onChange={toggle} />
+      <p>Current mode: {mode}</p>
+      <p>Is dark: {isDark}</p>
+    </>
+  );
 };
 ```
 
@@ -75,63 +81,54 @@ export default () => {
 
 ### Hook
 
-```typescript | pure
-const [isDark, { toggle, collectCSS }] = useDarkreader(defaultDarken, theme?, fixes?)
+```typescript
+const [isDark, { toggle, setMode, collectCSS }, mode] = useDarkreader(
+  defaultDarken,
+  theme?,
+  fixes?,
+  allowSystem,
+);
 ```
 
-with a toggle button as ui.
+### Hook Result
 
-```tsx | pure
-<Switch checked={isDark} onChange={toggle} />
-```
+| Return Value | Description                                             | Type                              |
+| ------------ | ------------------------------------------------------- | --------------------------------- |
+| `isDark`     | Whether the current mode is dark.                       | `boolean`                         |
+| `action`     | Object containing darkmode control methods.             | `{ toggle, setMode, collectCSS }` |
+| `mode`       | Current mode value: `'light'`, `'dark'`, or `'system'`. | `'light' \| 'dark' \| 'system'`   |
 
-### Result
+#### `action` methods
 
-| Params     | Description                                             | Type                          |
-| ---------- | ------------------------------------------------------- | ----------------------------- |
-| isDark     | The status of current darkmode, support `true`, `false` | `boolean`                     |
-| toggle     | The function for toggling the darkmode.                 | `() => void`                  |
-| collectCSS | The async function for collecting the css of darkmode.  | `async () => Promise<string>` |
+| Method       | Description                                              | Type                    |
+| ------------ | -------------------------------------------------------- | ----------------------- |
+| `toggle`     | Cycle through modes (`light → dark → (system) → light`). | `() => void`            |
+| `setMode`    | Manually set mode (`'light'`, `'dark'`, `'system'`).     | `(mode: Mode) => void`  |
+| `collectCSS` | Collect generated darkmode CSS asynchronously.           | `() => Promise<string>` |
 
-### Params
+### Parameters
 
-| Params        | Description                                                                                                                                                                   | Type              | Default |
-| ------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------- | ------- |
-| defaultDarken | The default status of the darkreader                                                                                                                                          | `boolean`         | false   |
-| theme         | The options of darkreader Theme [refered to index.d.ts &rarr;](https://github.com/darkreader/darkreader/blob/13c93a995cde0b933580174106897bb1d13f53b4/index.d.ts#L41)         | `Partial<Theme>`  | -       |
-| fixes         | Contains fixes for the generated theme [refered to index.d.ts &rarr;](https://github.com/darkreader/darkreader/blob/13c93a995cde0b933580174106897bb1d13f53b4/index.d.ts#L121) | `DynamicThemeFix` | -       |
+| Param           | Description                                                                                                  | Type              | Default |
+| --------------- | ------------------------------------------------------------------------------------------------------------ | ----------------- | ------- |
+| `defaultDarken` | Initial darkmode status.                                                                                     | `boolean`         | `false` |
+| `theme`         | Darkreader theme overrides. [Reference →](https://github.com/darkreader/darkreader/blob/main/index.d.ts#L41) | `Partial<Theme>`  | -       |
+| `fixes`         | Fixes for generated theme. [Reference →](https://github.com/darkreader/darkreader/blob/main/index.d.ts#L121) | `DynamicThemeFix` | -       |
+| `allowSystem`   | Whether to allow system color scheme (`prefers-color-scheme`) support.                                       | `boolean`         | `false` |
 
 ## 🔢 Coming Soon
 
-- [x] add the material design styling in switch
-- [ ] followSystemColorScheme
-- [ ] localstorge
-- [ ] playground for editing the config online
+- [x] Material design switch UI
+- [x] `followSystemColorScheme`
+- [x] `localStorage` persistence
+- [ ] Online playground for theme config
 
 ## 🔨 Contribute
 
-Install dependencies,
-
 ```bash
-$ npm i
-```
-
-Start the dev server,
-
-```bash
-$ npm start
-```
-
-Build documentation,
-
-```bash
-$ npm run docs:build
-```
-
-Build library via `father-build`,
-
-```bash
-$ npm run build
+npm i
+npm start      # Start dev server
+npm run build  # Build library
+npm run docs:build
 ```
 
 ## 🥇 Who is using
