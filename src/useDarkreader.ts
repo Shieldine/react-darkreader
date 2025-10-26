@@ -61,23 +61,11 @@ export default function useDarkreader(
 
   const [mode, setMode] = useState<Mode>(getInitialMode);
 
-  const [systemDark, setSystemDark] = useState(
-    typeof window !== 'undefined'
-      ? window.matchMedia('(prefers-color-scheme: dark)').matches
-      : defaultDarken,
-  );
-
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    const mq = window.matchMedia('(prefers-color-scheme: dark)');
-
-    const handler = (e: MediaQueryListEvent) => setSystemDark(e.matches);
-    mq.addEventListener('change', handler);
-
-    return () => mq.removeEventListener('change', handler);
-  }, []);
-
-  const isDark = mode === 'dark' || (mode === 'system' && systemDark);
+  const isDark =
+    mode === 'dark' ||
+    (mode === 'system' &&
+      typeof window !== 'undefined' &&
+      window.matchMedia('(prefers-color-scheme: dark)').matches);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -98,6 +86,10 @@ export default function useDarkreader(
     }
 
     const applyMode = (selectedMode: Mode) => {
+      if (selectedMode !== 'system') {
+        followSystemColorScheme(false);
+      }
+
       if (selectedMode === 'system' && allowSystem) {
         followSystemColorScheme(
           { ...defaultTheme, ...theme },
