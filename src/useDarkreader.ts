@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   auto as followSystemColorScheme,
   disable as disableDarkMode,
@@ -45,6 +45,10 @@ export default function useDarkreader(
   const STORAGE_KEY = 'darkreader-mode';
 
   const getInitialMode = (): Mode => {
+    if (typeof window === 'undefined') {
+      return defaultDarken ? 'dark' : 'light';
+    }
+
     const storedValue = localStorage.getItem(STORAGE_KEY);
     if (isValidMode(storedValue)) {
       if (storedValue === 'system' && !allowSystem) {
@@ -57,16 +61,39 @@ export default function useDarkreader(
 
   const [mode, setMode] = useState<Mode>(getInitialMode);
 
-  const isDark =
-    mode === 'dark' ||
-    (mode === 'system' &&
-      window.matchMedia('(prefers-color-scheme: dark)').matches);
+  const [systemDark, setSystemDark] = useState(
+    typeof window !== 'undefined'
+      ? window.matchMedia('(prefers-color-scheme: dark)').matches
+      : defaultDarken,
+  );
 
   useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const mq = window.matchMedia('(prefers-color-scheme: dark)');
+
+    const handler = (e: MediaQueryListEvent) => setSystemDark(e.matches);
+    mq.addEventListener('change', handler);
+
+    return () => mq.removeEventListener('change', handler);
+  }, []);
+
+  const isDark = mode === 'dark' || (mode === 'system' && systemDark);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
     setFetchMethod(window.fetch);
+  }, []);
+
+  const lastApplied = useRef<Mode | null>(null);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
 
     if (mode === 'system' && !allowSystem) {
-      setMode(defaultDarken ? 'dark' : 'light');
+      const corrected = defaultDarken ? 'dark' : 'light';
+      setMode(corrected);
+      localStorage.setItem(STORAGE_KEY, corrected);
+      lastApplied.current = corrected;
       return;
     }
 
@@ -86,19 +113,10 @@ export default function useDarkreader(
       }
     };
 
-    applyMode(mode);
-    localStorage.setItem(STORAGE_KEY, mode);
-
-    if (mode === 'system' && allowSystem) {
-      const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-      const handleChange = () => {
-        applyMode('system');
-      };
-      mediaQuery.addEventListener('change', handleChange);
-
-      return () => {
-        mediaQuery.removeEventListener('change', handleChange);
-      };
+    if (lastApplied.current !== mode) {
+      applyMode(mode);
+      localStorage.setItem(STORAGE_KEY, mode);
+      lastApplied.current = mode;
     }
   }, [mode, allowSystem]);
 
